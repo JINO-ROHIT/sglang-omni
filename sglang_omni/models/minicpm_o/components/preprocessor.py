@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-from functools import partial
 from collections.abc import Mapping, Sequence
+from functools import partial
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -13,9 +13,7 @@ import torch
 from PIL import Image
 from transformers import AutoProcessor, AutoTokenizer
 
-from sglang_omni.models.minicpm_o.components.image_processing import (
-    process_images,
-)
+from sglang_omni.models.minicpm_o.components.image_processing import process_images
 from sglang_omni.models.minicpm_o.payload_types import (
     AudioEncoderInputs,
     ImageEncoderInputs,
