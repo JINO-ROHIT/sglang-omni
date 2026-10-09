@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from functools import partial
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -13,7 +12,7 @@ import torch
 from PIL import Image
 from transformers import AutoProcessor, AutoTokenizer
 
-from sglang_omni.models.minicpm_o.components.image_processing import process_images
+from sglang_omni.models.minicpm_o.components.image_processing import CUDAImageProcessor
 from sglang_omni.models.minicpm_o.payload_types import (
     AudioEncoderInputs,
     ImageEncoderInputs,
@@ -108,6 +107,7 @@ class MiniCPMOPreprocessor:
         model_path: str,
         *,
         speech_enabled: bool = False,
+        device: torch.device = torch.device("cpu"),
     ) -> None:
         local_dir = str(resolve_model_path(model_path))
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -117,6 +117,7 @@ class MiniCPMOPreprocessor:
         self.model_dir = local_dir
         self._processor = None  # noqa: leading-underscore
         self.speech_enabled = speech_enabled
+        self.device = device
 
     def speech_to_text_inputs(
         self, payload: StagePayload, inputs: Mapping[str, object]
@@ -139,10 +140,10 @@ class MiniCPMOPreprocessor:
             self._processor = AutoProcessor.from_pretrained(  # noqa: leading-underscore
                 self.model_dir, trust_remote_code=True
             )
-            if torch.cuda.is_available():
+            if self.device.type == "cuda":
                 processor = self._processor  # noqa: leading-underscore
-                processor.process_image = partial(
-                    process_images, processor.image_processor
+                processor.process_image = CUDAImageProcessor(
+                    processor.image_processor, self.device
                 )
             else:
                 pass
